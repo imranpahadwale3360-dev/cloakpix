@@ -4,6 +4,7 @@ import 'features/alerts/security_alerts_screen.dart';
 import 'features/auth/pin_lock_screen.dart';
 import 'features/backup/backup_status_screen.dart';
 import 'features/camouflage/calculator_camouflage_screen.dart';
+import 'features/camouflage/phone_lock_camouflage_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/trash/trash_screen.dart';
@@ -43,7 +44,7 @@ class _CloakPixAppState extends State<CloakPixApp> with WidgetsBindingObserver {
       _lockRequired = false;
       final navigator = _navigatorKey.currentState;
       if (navigator == null) return;
-      navigator.pushNamedAndRemoveUntil(CalculatorCamouflageScreen.routeName, (_) => false);
+      navigator.pushNamedAndRemoveUntil(PhoneLockCamouflageScreen.routeName, (_) => false);
     }
   }
 
@@ -51,18 +52,37 @@ class _CloakPixAppState extends State<CloakPixApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: _navigatorKey,
-      title: 'CloakPix',
+      title: 'Phone Lock',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0E7C7B),
+          seedColor: const Color(0xFF0EA5A4),
           brightness: Brightness.dark,
         ),
-        scaffoldBackgroundColor: const Color(0xFF0B0F14),
+        scaffoldBackgroundColor: const Color(0xFF071013),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF071013),
+          foregroundColor: Color(0xFFEAF7F5),
+          centerTitle: false,
+          elevation: 0,
+        ),
+        cardTheme: CardTheme(
+          color: const Color(0xFF102024),
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFF0EA5A4),
+            foregroundColor: const Color(0xFF031111),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        ),
         useMaterial3: true,
       ),
-      initialRoute: CalculatorCamouflageScreen.routeName,
+      initialRoute: PhoneLockCamouflageScreen.routeName,
       routes: {
+        PhoneLockCamouflageScreen.routeName: (_) => const PhoneLockCamouflageScreen(),
         CalculatorCamouflageScreen.routeName: (_) => const CalculatorCamouflageScreen(),
         PinLockScreen.routeName: (_) => const PinLockScreen(),
         OnboardingScreen.routeName: (_) => const OnboardingScreen(),
