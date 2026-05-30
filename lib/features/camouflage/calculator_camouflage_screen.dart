@@ -4,134 +4,153 @@ import '../../core/security/pin_service.dart';
 import '../auth/pin_lock_screen.dart';
 import '../onboarding/onboarding_screen.dart';
 
-class CalculatorCamouflageScreen extends StatefulWidget {
-  const CalculatorCamouflageScreen({super.key});
+class PhoneLockCamouflageScreen extends StatefulWidget {
+  const PhoneLockCamouflageScreen({super.key});
 
   static const routeName = '/';
 
   @override
-  State<CalculatorCamouflageScreen> createState() => _CalculatorCamouflageScreenState();
+  State<PhoneLockCamouflageScreen> createState() => _PhoneLockCamouflageScreenState();
 }
 
-class _CalculatorCamouflageScreenState extends State<CalculatorCamouflageScreen> {
+class _PhoneLockCamouflageScreenState extends State<PhoneLockCamouflageScreen> {
   final PinService _pinService = PinService();
-  String _display = '0';
-  String _operator = '';
-  double? _left;
-  bool _replace = true;
+  String _status = 'Device lock is ready';
+  bool _armed = false;
 
-  Future<void> _tap(String value) async {
-    if (value == 'C') {
-      setState(() {
-        _display = '0';
-        _operator = '';
-        _left = null;
-        _replace = true;
-      });
-      return;
-    }
-    if (value == '=') {
-      await _equals();
-      return;
-    }
-    if ('+-x/'.contains(value)) {
-      setState(() {
-        _left = double.tryParse(_display) ?? 0;
-        _operator = value;
-        _replace = true;
-      });
-      return;
-    }
+  Future<void> _openHiddenVault() async {
+    final hasPin = await _pinService.hasPin();
+    if (!mounted) return;
+    await Navigator.of(context).pushNamed(hasPin ? PinLockScreen.routeName : OnboardingScreen.routeName);
+  }
+
+  void _fakeLock() {
     setState(() {
-      if (_replace || _display == '0') {
-        _display = value;
-        _replace = false;
-      } else {
-        _display += value;
-      }
+      _armed = true;
+      _status = 'Screen lock simulation enabled';
     });
   }
 
-  Future<void> _equals() async {
-    final maybePin = RegExp(r'^\d{4,12}$').hasMatch(_display);
-    if (maybePin && await _pinService.hasPin() && await _pinService.verifyPin(_display)) {
-      if (!mounted) return;
-      await Navigator.of(context).pushNamed(PinLockScreen.routeName);
-      return;
-    }
-    if (maybePin && !await _pinService.hasPin()) {
-      if (!mounted) return;
-      await Navigator.of(context).pushNamed(OnboardingScreen.routeName);
-      return;
-    }
-    final right = double.tryParse(_display) ?? 0;
-    final left = _left ?? right;
-    final result = switch (_operator) {
-      '+' => left + right,
-      '-' => left - right,
-      'x' => left * right,
-      '/' => right == 0 ? double.nan : left / right,
-      _ => right,
-    };
+  void _fakeUnlock() {
     setState(() {
-      _display = result.isNaN ? 'Error' : _format(result);
-      _operator = '';
-      _left = null;
-      _replace = true;
+      _armed = false;
+      _status = 'Device lock is ready';
     });
-  }
-
-  String _format(double value) {
-    if (value == value.roundToDouble()) return value.toInt().toString();
-    return value.toStringAsFixed(8).replaceFirst(RegExp(r'0+$'), '').replaceFirst(RegExp(r'\.$'), '');
   }
 
   @override
   Widget build(BuildContext context) {
-    final keys = ['7', '8', '9', '/', '4', '5', '6', 'x', '1', '2', '3', '-', 'C', '0', '=', '+'];
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFF070B0D),
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: Align(
-                alignment: Alignment.bottomRight,
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    _display,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 56, fontWeight: FontWeight.w300),
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF111C22), Color(0xFF070B0D)],
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(22, 18, 22, 22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF17252B),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFF294049)),
+                      ),
+                      child: const Icon(Icons.lock_outline, color: Color(0xFFD7E6E8)),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Phone Lock',
+                        style: TextStyle(
+                          color: Color(0xFFEAF7F5),
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                Center(
+                  child: GestureDetector(
+                    onLongPress: _openHiddenVault,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      width: 178,
+                      height: 178,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _armed ? const Color(0xFF0EA5A4) : const Color(0xFF132126),
+                        border: Border.all(
+                          color: _armed ? const Color(0xFFBDF3EF) : const Color(0xFF294049),
+                          width: 2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (_armed ? const Color(0xFF0EA5A4) : Colors.black).withOpacity(0.28),
+                            blurRadius: 34,
+                            offset: const Offset(0, 18),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        _armed ? Icons.lock : Icons.lock_open_outlined,
+                        size: 74,
+                        color: _armed ? const Color(0xFF031111) : const Color(0xFFD7E6E8),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(12),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-              ),
-              itemCount: keys.length,
-              itemBuilder: (context, index) {
-                final key = keys[index];
-                final isOperator = '+-x/='.contains(key);
-                return FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: isOperator ? Colors.deepOrange : const Color(0xFF242424),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                const SizedBox(height: 28),
+                Text(
+                  _status,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Color(0xFFEAF7F5),
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0,
                   ),
-                  onPressed: () => _tap(key),
-                  child: Text(key, style: const TextStyle(fontSize: 28)),
-                );
-              },
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _armed
+                      ? 'Tap unlock to disable the protection overlay.'
+                      : 'Tap lock to activate the protection overlay.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Color(0xFF9FB2B7),
+                    fontSize: 14,
+                    letterSpacing: 0,
+                  ),
+                ),
+                const Spacer(),
+                FilledButton.icon(
+                  onPressed: _armed ? _fakeUnlock : _fakeLock,
+                  icon: Icon(_armed ? Icons.lock_open_outlined : Icons.lock_outline),
+                  label: Text(_armed ? 'Unlock Screen' : 'Lock Screen'),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () => setState(() => _status = 'No threats detected'),
+                  icon: const Icon(Icons.verified_user_outlined),
+                  label: const Text('Run Lock Check'),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
