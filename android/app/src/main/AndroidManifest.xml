@@ -11,7 +11,7 @@
     <application
         android:label="CloakPix"
         android:name="${applicationName}"
-        android:icon="@drawable/ic_launcher"
+        android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"
         android:fullBackupContent="false"
         android:usesCleartextTraffic="false">
@@ -42,7 +42,8 @@
             android:name=".CalculatorAlias"
             android:enabled="false"
             android:exported="true"
-            android:icon="@drawable/ic_launcher"
+            android:icon="@mipmap/ic_launcher"
+      
             android:label="Calculator"
             android:targetActivity=".MainActivity">
             <intent-filter>
